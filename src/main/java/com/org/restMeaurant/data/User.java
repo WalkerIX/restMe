@@ -4,7 +4,6 @@ package com.org.restMeaurant.data;
 public class User {
 
     public static final String TYPE = "User";
-    public static final String INVALID = "InvalidUser";
 
     private String firstName;
     private String userId;

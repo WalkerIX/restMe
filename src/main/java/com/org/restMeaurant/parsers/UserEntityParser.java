@@ -3,6 +3,7 @@ package com.org.restMeaurant.parsers;
 
 import com.google.appengine.api.datastore.Entity;
 import com.org.restMeaurant.data.User;
+import com.org.restMeaurant.utils.Result;
 
 public class UserEntityParser {
 
@@ -12,16 +13,19 @@ public class UserEntityParser {
     private UserEntityParser() {
     }
 
-    public static Entity userToEntity(User user) {
+    public static Result<Entity> userToEntity(User user) {
         if(user.getUserId().isEmpty()){
-            return new Entity(User.INVALID, User.INVALID);
+            return new Result(null, false);
         }
-        return new Entity(User.TYPE, user.getUserId());
+        Entity entity = new Entity(User.TYPE, user.getUserId());
+        entity.setProperty(UserNameField, user.getUserId());
+        entity.setProperty(UserFirstNameField, user.getFirstName());
+        return new Result(entity, true);
     }
 
-    public static User entityToUser(Entity entity) {
+    public static Result<User> entityToUser(Entity entity) {
         String userName = !entity.hasProperty(UserNameField) ? "" : (String) entity.getProperty(UserNameField);
         String userFirstName = !entity.hasProperty(UserFirstNameField) ? "" : (String) entity.getProperty(UserFirstNameField);
-        return new User(userName, userFirstName);
+        return new Result(new User(userName, userFirstName), userName.isEmpty()?false:true);
     }
 }

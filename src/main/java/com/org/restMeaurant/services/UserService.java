@@ -2,14 +2,16 @@ package com.org.restMeaurant.services;
 
 import com.google.api.server.spi.config.Api;
 import com.google.api.server.spi.config.ApiMethod;
-import com.google.appengine.api.datastore.Entity;
-import com.google.appengine.api.datastore.EntityNotFoundException;
-import com.google.appengine.api.datastore.Key;
+import com.google.appengine.api.datastore.*;
 import com.org.restMeaurant.data.User;
 import com.org.restMeaurant.parsers.UserEntityParser;
+import com.org.restMeaurant.utils.Result;
 import com.org.restMeaurant.utils.ReturnInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.inject.Named;
+import java.util.List;
 
 
 @Api(name = "user", version = "v1")
@@ -20,28 +22,30 @@ public class UserService extends DataStoreEndpointService{
         super();
     }
     @ApiMethod(name = "get", httpMethod = ApiMethod.HttpMethod.GET)
-    public User getUser(User user){
-        Entity userEntity = UserEntityParser.userToEntity(user);
-        if(userEntity.getKind().equalsIgnoreCase(User.TYPE)) {
-            try {
-                Entity resultEntity = datastoreService.get(userEntity.getKey());
-                return UserEntityParser.entityToUser(resultEntity);
-            } catch (EntityNotFoundException e) {
-                logger.warn("Fail to get Entity for User {0}", user.toString(), e);
-                return new User();
-            }
+    public User getUser(@Named("userName")String userName) {
+        Query.Filter userNameFilter =
+                new Query.FilterPredicate(UserEntityParser.UserNameField, Query.FilterOperator.EQUAL, userName);
+        Query query = new Query(User.TYPE).setFilter(userNameFilter);
+        List<Entity> entityList = datastoreService.prepare(query).asList(FetchOptions.Builder.withDefaults());
+        // userName should be unique
+        if(entityList.size()!=1){
+            logger.info("No valid user is found for userName: "+userName);
+            return new User("","");
         }
-        // if the input user is not valid
-        logger.warn("The input user {0} is not valid", user.toString());
-        return new User();
+        Result<User> result = UserEntityParser.entityToUser(entityList.get(0));
+        if(!result.isValid()){
+            logger.info("No valid user is found for userName: "+userName);
+            return new User("","");
+        }
+        return result.getData();
     }
 
     @ApiMethod(name = "insert", httpMethod = ApiMethod.HttpMethod.POST)
     public ReturnInfo insertUser(User user){
-        Entity userEntity = UserEntityParser.userToEntity(user);
-        if(userEntity.getKind().equalsIgnoreCase(User.TYPE)) {
-            Key key = datastoreService.put(userEntity);
-            return new ReturnInfo("Key 2: "+key.toString(), true);
+        Result<Entity> parseResult = UserEntityParser.userToEntity(user);
+        if(parseResult.isValid()) {
+            Key key = datastoreService.put(parseResult.getData());
+            return new ReturnInfo("Key: "+key.toString(), true);
         }
         // if the input user is not valid
         logger.warn("The input user {0} is not valid", user.toString());
