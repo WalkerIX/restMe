@@ -23,10 +23,7 @@ public class UserService extends DataStoreEndpointService{
     }
     @ApiMethod(name = "get", httpMethod = ApiMethod.HttpMethod.GET)
     public User getUser(@Named("userName")String userName) {
-        Query.Filter userNameFilter =
-                new Query.FilterPredicate(UserEntityParser.UserNameField, Query.FilterOperator.EQUAL, userName);
-        Query query = new Query(User.TYPE).setFilter(userNameFilter);
-        List<Entity> entityList = datastoreService.prepare(query).asList(FetchOptions.Builder.withDefaults());
+        List<Entity> entityList = queryUserById(userName);
         // userName should be unique
         if(entityList.size()!=1){
             logger.info("No valid user is found for userName: "+userName);
