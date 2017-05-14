@@ -7,12 +7,12 @@ import com.org.restMeaurant.data.User;
 
 import javax.inject.Named;
 
-//import org.slf4j.Logger;
-//import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Api(name = "restaurant", version = "v1")
 public class RestaurantService extends DataStoreEndpointService {
-//    private final static Logger logger = LoggerFactory.getLogger(RestaurantService.class);
+    private final static Logger logger = LoggerFactory.getLogger(RestaurantService.class);
 
     public RestaurantService() {
         super();
