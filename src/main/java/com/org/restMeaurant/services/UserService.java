@@ -11,7 +11,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Named;
-import java.util.List;
 
 
 @Api(name = "user", version = "v1")
@@ -23,13 +22,13 @@ public class UserService extends DataStoreEndpointService{
     }
     @ApiMethod(name = "get", httpMethod = ApiMethod.HttpMethod.GET)
     public User getUser(@Named("userName")String userName) {
-        List<Entity> entityList = queryUserById(userName);
+        Result<Entity> userIdResult = queryUserById(userName);
         // userName should be unique
-        if(entityList.size()!=1){
+        if(!userIdResult.isValid()){
             logger.info("No valid user is found for userName: "+userName);
             return new User("","");
         }
-        Result<User> result = UserEntityParser.entityToUser(entityList.get(0));
+        Result<User> result = UserEntityParser.entityToUser(userIdResult.getData());
         if(!result.isValid()){
             logger.info("No valid user is found for userName: "+userName);
             return new User("","");

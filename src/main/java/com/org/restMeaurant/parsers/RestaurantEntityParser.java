@@ -24,10 +24,17 @@ public class RestaurantEntityParser {
         String name = restaurantEntity.hasProperty(FieldName) ? (String) restaurantEntity.getProperty(FieldName) : "";
         String address = restaurantEntity.hasProperty(FieldAddress) ? (String) restaurantEntity.getProperty(FieldAddress) : "";
         String cuisine = restaurantEntity.hasProperty(FieldCuisine) ? (String) restaurantEntity.getProperty(FieldCuisine) : "";
-        int priceLevel = restaurantEntity.hasProperty(FieldPriceLevel) ? (int) restaurantEntity.getProperty(FieldPriceLevel) : 1;
-        SatisfactionLevel satisfactionLevel = restaurantEntity.hasProperty(FieldSatisfactionLevel) ?
-                (SatisfactionLevel) restaurantEntity.getProperty(FieldSatisfactionLevel) : SatisfactionLevel.NEUTRAL;
-        return new Result<Restaurant>(new Restaurant(name, address, cuisine, priceLevel, satisfactionLevel),
+        int priceLevel = restaurantEntity.hasProperty(FieldPriceLevel) ?
+                ((Long)restaurantEntity.getProperty(FieldPriceLevel)).intValue() : 1;
+
+        SatisfactionLevel satisfactionLevel = SatisfactionLevel.NEUTRAL;
+        if(restaurantEntity.hasProperty(FieldSatisfactionLevel)){
+            String level = (String) restaurantEntity.getProperty(FieldSatisfactionLevel);
+            if(SatisfactionLevel.contains(level)){
+                satisfactionLevel = SatisfactionLevel.valueOf(level);
+            }
+        }
+        return new Result(new Restaurant(name, address, cuisine, priceLevel, satisfactionLevel),
                 name.isEmpty() ? false : true);
     }
 
@@ -37,11 +44,15 @@ public class RestaurantEntityParser {
         entity.setProperty(FieldAddress, restaurant.getAddress());
         entity.setProperty(FieldCuisine, restaurant.getCuisine());
         entity.setProperty(FieldPriceLevel, restaurant.getPriceLevel());
-        entity.setProperty(FieldSatisfactionLevel, restaurant.getSatisfactionLevel());
+        entity.setProperty(FieldSatisfactionLevel, restaurant.getSatisfactionLevel().toString());
         return entity;
     }
 
-    private static String composeRestaurantKey(Restaurant restaurant, Entity userEntity) {
-        return userEntity.getProperty(UserEntityParser.UserNameField) + Seperator + restaurant.getName();
+    public static String composeRestaurantKey(Restaurant restaurant, Entity userEntity) {
+        return composeRestaurantKey((String) userEntity.getProperty(UserEntityParser.UserNameField), restaurant.getName());
+    }
+
+    public static String composeRestaurantKey(String restaurantName, String userName) {
+        return restaurantName + Seperator + userName;
     }
 }
